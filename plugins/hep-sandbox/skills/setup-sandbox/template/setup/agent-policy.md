@@ -17,6 +17,11 @@ Read-only by design; do not try to work around this:
 
 Also treat any `data/` or `raw/` directory and any `*.root` file as read-only unless told otherwise.
 
+You cannot change this container yourself (packages, mounts, policy): `infrastructure/` is
+read-only. If something should change, write a short proposal to
+`/workspace/hep/scratch/proposals/<date>-<topic>.md` and tell the user; changes are applied from a
+Mac-side session.
+
 Where to put things:
 
 - `/workspace/hep/scratch/`: temporary files only; treat it as disposable.

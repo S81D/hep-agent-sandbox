@@ -5,7 +5,7 @@ license: MIT
 compatibility: macOS (Apple Silicon or Intel) with Docker Desktop (or OrbStack) and VS Code + Dev Containers. Uses bash, python3 (3.9+) and docker on the Mac. Does not install software itself.
 allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/preflight.sh *) Bash(${CLAUDE_SKILL_DIR}/scripts/secret_scan.sh *)
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   source: "https://github.com/S81D/hep-agent-sandbox"
 ---
 

@@ -24,6 +24,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_TEMPLATE = SCRIPT_DIR.parent / "template"
 PRESETS = ("none", "fermilab-kerberos-host-only", "ssh-key-hpc")
 PLACEHOLDER = re.compile(r"\{\{([a-z_]+)\}\}")
+
+
+# macOS Finder metadata (binary) that appears in any folder browsed in Finder.
+def is_os_metadata(name):
+    return name == ".DS_Store" or name.startswith("._")
+
+
 # Characters that would break Docker's comma-separated --mount syntax or the JSON strings.
 UNSAFE_PATH_CHARS = re.compile(r'[,"\\]')
 
@@ -172,9 +179,13 @@ def render(answers, template_dir):
     outputs = {}
     for src in sorted(template_dir.rglob("*")):
         rel = src.relative_to(template_dir)
-        if src.is_dir() or any(part.startswith("_") for part in rel.parts):
+        if src.is_dir() or is_os_metadata(src.name) or any(part.startswith("_") for part in rel.parts):
             continue  # _presets/ etc. are inputs, not outputs
-        outputs[rel] = (substitute(src.read_text(), values, rel), os.access(src, os.X_OK))
+        try:
+            text = src.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            fail(f"template file {rel} is not UTF-8 text; remove it from the template")
+        outputs[rel] = (substitute(text, values, rel), os.access(src, os.X_OK))
     # Host keys for any ssh-key-hpc hosts go into the container's known_hosts.
     extra = [line for h in answers["hpc_hosts"] for line in known_hosts_lines(h["hostname"])]
     if extra:
@@ -202,7 +213,10 @@ def main():
     for rel, (text, executable) in outputs.items():
         dst = out_dir / rel
         if dst.exists():
-            old = dst.read_text()
+            try:
+                old = dst.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                fail(f"existing file {dst} is not UTF-8 text; move it aside and rerun")
             if old == text:
                 print(f"unchanged  {rel}")
                 continue

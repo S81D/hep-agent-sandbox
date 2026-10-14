@@ -1,0 +1,14 @@
+{
+  "name": "hep-agent-sandbox",
+  "description": "Sandboxed VS Code dev container for AI coding agents doing HEP work on a Mac",
+  "owner": {
+    "name": "S81D"
+  },
+  "plugins": [
+    {
+      "name": "hep-sandbox",
+      "source": "./plugins/hep-sandbox",
+      "description": "Guided setup of a sandboxed HEP dev container (Python/ROOT/C++/LaTeX) in which AI agents see only your research folder"
+    }
+  ]
+}

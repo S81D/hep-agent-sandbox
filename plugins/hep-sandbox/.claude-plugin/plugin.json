@@ -1,0 +1,12 @@
+{
+  "name": "hep-sandbox",
+  "displayName": "HEP Agent Sandbox",
+  "version": "0.1.0",
+  "description": "Guided setup of a sandboxed HEP dev container (Python/ROOT/C++/LaTeX) in which AI agents see only your research folder",
+  "author": {
+    "name": "S81D"
+  },
+  "repository": "https://github.com/S81D/hep-agent-sandbox",
+  "license": "MIT",
+  "keywords": ["hep", "physics", "devcontainer", "docker", "sandbox", "root", "security"]
+}

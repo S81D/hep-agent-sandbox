@@ -1,0 +1,27 @@
+{
+    "_help_hep_dir": "Host folder shared with the container (the only one). Must be inside your home folder.",
+    "hep_dir": "~/hep",
+
+    "_help_timezone": "IANA timezone for the container. Omit to use the Mac's own.",
+    "timezone": "America/Chicago",
+
+    "_help_container_name": "Docker container name; also used by the optional hep/hep-stop terminal aliases.",
+    "container_name": "hep-dev",
+
+    "_help_readonly_dirs": "Folders inside hep_dir that agents may read but never change (e.g. datasets). Must exist. infrastructure/ is always read-only and is not listed here.",
+    "readonly_dirs": [],
+
+    "_help_extra_watch_excludes": "Optional folder names VS Code should not watch or search (e.g. a large source checkout like g4-source). Read-only dirs are excluded automatically.",
+    "extra_watch_excludes": [],
+
+    "_help_remote_access": "One of: none | fermilab-kerberos-host-only | ssh-key-hpc. See references/decisions.md.",
+    "remote_access": "none",
+
+    "_help_hpc_hosts": "Only for ssh-key-hpc: hosts agents may ssh to. Each host's key must already be in ~/.ssh/known_hosts.",
+    "hpc_hosts": [],
+
+    "_help_personal": "Optional, written only into your local agent policy: who you are, the email for author lines, extra working preferences.",
+    "user_blurb": "",
+    "author_email": "",
+    "extra_preferences": []
+}

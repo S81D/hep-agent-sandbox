@@ -1,0 +1,84 @@
+{
+    "name": "HEP Analysis Environment",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "context": "..",
+        "args": {
+            // Lets the image symlink /Users/<you>/{{hep_rel}} -> /workspace/hep so absolute host paths still resolve
+            "HOST_HEP": "${localEnv:HOME}/{{hep_rel}}"
+        }
+    },
+
+    // The container's main process and VS Code's server both run as the unprivileged user.
+    "containerUser": "vscode",
+    "remoteUser": "vscode",
+
+    // ~/{{hep_rel}} is the ONLY host directory exposed to the container.
+    "workspaceMount": "source=${localEnv:HOME}/{{hep_rel}},target=/workspace/hep,type=bind",
+    "workspaceFolder": "/workspace/hep",
+
+    // SSH agent: no mount here. Docker Desktop's /run/host-services/ssh-auth.sock is
+    // root:root 0660, so the non-root vscode user cannot use it. VS Code's Dev Containers
+    // extension forwards the Mac ssh-agent automatically instead (keys never enter the container).
+    "mounts": [
+        // Read-only overlays on top of the workspace mount: the agent cannot edit its own sandbox
+        // configuration or the listed datasets. Enforced by the kernel, even for root in the container.
+{{readonly_mounts}}
+        // Agent logins/state live in container-only named volumes (survive rebuilds),
+        // never in the host's ~/.claude or ~/.codex.
+        "source=hep-claude-config,target=/home/vscode/.claude,type=volume",
+        "source=hep-codex-home,target=/home/vscode/.codex,type=volume",
+        // Compiled builds (Geant4, MARLEY, ...): persistent and fast, but not on the Mac or in its backup.
+        "source=hep-builds,target=/home/vscode/builds,type=volume"
+    ],
+
+    "runArgs": [
+        // Fixed container name (survives rebuilds) so a Mac terminal can enter it with:
+        //   docker exec -it -u vscode -w /workspace/hep {{container_name}} bash
+        "--name", "{{container_name}}",
+        // No Linux capabilities, and setuid binaries cannot raise privileges.
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges:true"
+    ],
+    // Small init process that reaps orphaned child processes spawned by agents/tools.
+    "init": true,
+
+    "containerEnv": {
+        "TZ": "{{timezone}}",
+        "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+        "CODEX_HOME": "/home/vscode/.codex"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "james-yu.latex-workshop",
+                "anthropic.claude-code",
+                "openai.chatgpt"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/opt/conda/envs/hep/bin/python",
+                // Stop VS Code's git askpass bridge, which can hand GitHub tokens from the
+                // VS Code sign-in to processes in container terminals.
+                "git.terminalAuthentication": false,
+                // Don't let CMake Tools configure projects (e.g. Geant4) just because a folder opened.
+                "cmake.configureOnOpen": false,
+                // Keep VS Code's file watcher and search out of large data trees.
+                "files.watcherExclude": {
+{{watch_excludes}}
+                },
+                "search.exclude": {
+{{watch_excludes}}
+                }
+            }
+        }
+    },
+
+    "postCreateCommand": "bash /workspace/hep/infrastructure/hep-devcontainer/setup/verify.sh",
+    // Codex reads ~/.codex/AGENTS.md, which lives in a volume; refresh it from the image each start.
+    "postStartCommand": "install -m 0644 /etc/hep-agent/AGENTS.md /home/vscode/.codex/AGENTS.md"
+}

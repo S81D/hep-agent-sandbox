@@ -1,0 +1,8 @@
+# Local test outputs and caches
+__pycache__/
+*.pyc
+.DS_Store
+
+# Never commit a personal answers file or rendered configuration
+answers.json
+rendered/

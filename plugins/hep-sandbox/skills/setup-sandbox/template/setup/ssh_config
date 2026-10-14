@@ -1,0 +1,19 @@
+# SSH client config for the HEP dev container.
+# Installed in the image as /etc/ssh/ssh_config.d/50-hep.conf (root-owned, so the
+# agent user cannot edit it). Ubuntu's /etc/ssh/ssh_config includes this directory.
+#
+# Authentication uses the macOS ssh-agent, forwarded into the container by VS Code's
+# Dev Containers extension. No private keys exist in the container.
+#
+{{ssh_preset_comment}}
+
+Host github.com
+    User git
+{{ssh_hpc_hosts}}
+Host *
+    # Never pass the forwarded agent on to another machine.
+    ForwardAgent no
+    ForwardX11 no
+    # Only connect to hosts whose keys are in /etc/ssh/ssh_known_hosts; never auto-accept new ones.
+    StrictHostKeyChecking yes
+    UpdateHostKeys no

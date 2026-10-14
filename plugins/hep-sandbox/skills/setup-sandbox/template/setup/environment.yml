@@ -1,0 +1,41 @@
+# Conda-forge environment for the HEP dev container (installed at /opt/conda/envs/hep).
+#
+# Default: a tested set of pins (solves on linux-aarch64 and linux-64, checked 2026-10-14).
+# To match your own host conda env instead, edit the versions below (the setup skill can
+# do this with you) and rebuild.
+#
+# The exact build of every package is recorded in conda-<platform>.lock, exported from
+# the built image after the first build. Do not bump versions here just because newer ones exist.
+name: hep
+channels:
+  - conda-forge
+dependencies:
+  - python=3.14.6
+  - root=6.40.02
+
+  # core scientific stack
+  - numpy=2.5.1
+  - scipy=1.18.0
+  - matplotlib-base=3.11.1   # -base: no Qt GUI backend, which a headless container doesn't need
+  - pandas=3.0.3
+
+  # HEP Python ecosystem
+  - uproot=5.7.5
+  - awkward=2.10.0
+  - iminuit=2.32.0
+  - pyhepmc=2.16.1
+  - hist=2.10.1
+  - vector=1.8.1
+  - particle=1.0.0
+
+  # notebooks / interactive
+  - jupyterlab=4.6.2
+  - ipython=9.15.0
+  - ipykernel=7.3.0
+
+  # small utilities
+  - tqdm=4.69.0
+  - pyyaml=6.0.3
+
+  # JavaScript tooling (node/npm); Node 24 is the current LTS line (added 2026-10-14)
+  - nodejs=24.21.0

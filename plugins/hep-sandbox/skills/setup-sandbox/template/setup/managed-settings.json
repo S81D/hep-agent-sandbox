@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push *)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(rsync *)",
+      "Bash(rm -r *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)"
+    ]
+  },
+  "env": {
+    "DISABLE_AUTOUPDATER": "1"
+  }
+}

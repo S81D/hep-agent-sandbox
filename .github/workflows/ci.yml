@@ -1,0 +1,82 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell scripts (syntax + shellcheck errors)
+        run: |
+          set -e
+          cd plugins/hep-sandbox/skills/setup-sandbox
+          for f in scripts/preflight.sh scripts/secret_scan.sh template/setup/verify.sh; do bash -n "$f"; done
+          shellcheck --severity=error scripts/preflight.sh scripts/secret_scan.sh template/setup/verify.sh
+
+      - name: JSON manifests and examples
+        run: |
+          set -e
+          for f in .claude-plugin/marketplace.json plugins/hep-sandbox/.claude-plugin/plugin.json \
+                   plugins/hep-sandbox/skills/setup-sandbox/scripts/answers.example.json \
+                   plugins/hep-sandbox/skills/setup-sandbox/template/setup/managed-settings.json; do
+            python3 -m json.tool "$f" > /dev/null && echo "ok $f"
+          done
+
+      - name: Render every remote-access preset
+        run: |
+          set -e
+          S=plugins/hep-sandbox/skills/setup-sandbox
+          mkdir -p ~/hep/infrastructure ~/hep/scratch ~/hep/data/sample
+          for preset in none fermilab-kerberos-host-only; do
+            printf '{"hep_dir": "~/hep", "timezone": "UTC", "readonly_dirs": ["data/sample"], "remote_access": "%s"}' "$preset" > /tmp/answers.json
+            python3 "$S/scripts/render.py" --answers /tmp/answers.json --out "/tmp/render-$preset"
+            if grep -rlE '\{\{[a-z_]+\}\}' "/tmp/render-$preset"; then echo "leftover placeholder"; exit 1; fi
+            python3 - "/tmp/render-$preset/.devcontainer/devcontainer.json" <<'PY'
+          import json, re, sys
+          text = re.sub(r"^\s*//.*$", "", open(sys.argv[1]).read(), flags=re.M)
+          d = json.loads(text)
+          assert any("data/sample" in m and "readonly" in m for m in d["mounts"]), d["mounts"]
+          print("devcontainer.json ok:", len(d["mounts"]), "mounts")
+          PY
+          done
+
+  build-and-verify:
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render a generic configuration
+        run: |
+          set -e
+          mkdir -p ~/hep/infrastructure ~/hep/scratch ~/hep/data/sample
+          echo '{"hep_dir": "~/hep", "timezone": "UTC", "readonly_dirs": ["data/sample"], "remote_access": "none"}' > /tmp/answers.json
+          python3 plugins/hep-sandbox/skills/setup-sandbox/scripts/render.py --answers /tmp/answers.json
+          # On Linux, bind mounts keep host ownership (Docker Desktop on macOS maps it), so let the
+          # container's uid 1000 write to the test workspace.
+          chmod -R a+rwX ~/hep
+
+      - name: Build the image
+        run: |
+          cd ~/hep/infrastructure/hep-devcontainer
+          docker build --build-arg HOST_HEP=/Users/ci/hep -t hep-dev:ci .
+
+      - name: Run verify.sh with the devcontainer's mounts and security flags
+        run: |
+          docker run --rm --user vscode --init \
+            --cap-drop=ALL --security-opt=no-new-privileges:true \
+            --mount "type=bind,source=$HOME/hep,target=/workspace/hep" \
+            --mount "type=bind,source=$HOME/hep/infrastructure,target=/workspace/hep/infrastructure,readonly" \
+            --mount "type=bind,source=$HOME/hep/data/sample,target=/workspace/hep/data/sample,readonly" \
+            --mount "type=volume,target=/home/vscode/builds" \
+            -w /workspace/hep hep-dev:ci \
+            bash /workspace/hep/infrastructure/hep-devcontainer/setup/verify.sh

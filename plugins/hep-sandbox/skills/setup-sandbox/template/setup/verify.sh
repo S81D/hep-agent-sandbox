@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Verification for the HEP dev container: toolchain, ROOT, Python, LaTeX, SSH, and the
-# isolation (security) checks from README §16, §31 and §33.
+# Verification for the HEP dev container: toolchain, ROOT, Python, LaTeX, HTML tools, SSH,
+# and the isolation (security) checks from README §16, §31 and §33.
 #
 # Every check runs (deliberately no `set -e`). Each prints PASS, FAIL or WARN, and the
 # script exits non-zero if anything FAILed. Nothing here writes to the host except a
@@ -281,8 +281,9 @@ import importlib.metadata as md
 import re, sys
 
 # conda package name -> installed Python distribution name, where they differ
-DIST_NAME = {"matplotlib-base": "matplotlib", "pyyaml": "PyYAML"}
-NOT_PYTHON = {"python", "root", "nodejs"}  # not Python packages, or checked elsewhere
+DIST_NAME = {"matplotlib-base": "matplotlib", "pyyaml": "PyYAML", "playwright-python": "playwright"}
+# not Python packages, or checked elsewhere
+NOT_PYTHON = {"python", "root", "nodejs", "pandoc", "katex", "playwright"}
 
 failures = 0
 for line in open(sys.argv[1]):
@@ -300,7 +301,7 @@ for line in open(sys.argv[1]):
 
 # The imports analyses actually use must work, not just be installed.
 for module in ["numpy", "scipy", "matplotlib", "pandas", "uproot", "awkward", "hist",
-               "vector", "particle", "iminuit", "pyhepmc"]:
+               "vector", "particle", "iminuit", "pyhepmc", "pptx", "playwright.sync_api"]:
     try:
         __import__(module)
     except Exception as err:
@@ -399,6 +400,54 @@ TEX
     rm -rf "$tmp"
 }
 
+html_checks() {
+    section "HTML pages (page-check with headless Chromium, KaTeX, pandoc)"
+    version "pandoc" pandoc --version
+    version "KaTeX (Node, via NODE_PATH)" node -p "require('katex').version"
+    check "KaTeX renders TeX to MathML" \
+        node -e "process.exit(require('katex').renderToString('E=mc^2', {output: 'mathml'}).includes('<math') ? 0 : 1)"
+    check "pandoc converts Markdown maths to MathML" bash -c 'printf "\$E=mc^2\$\n" | pandoc --math-method=mathml | grep -q "<math"'
+
+    # page-check must pass a clean page (which also loads a local script) and must report each
+    # defect planted in a broken one: these are its positive controls. No network is needed:
+    # the external script is blocked before any request leaves the container.
+    local tmp rc marker
+    tmp=$(mktemp -d)
+    cat > "${tmp}/clean.html" <<'HTML'
+<!doctype html><html><head><meta charset="utf-8"><title>clean</title>
+<style>body{background:#fff;color:#111}@media (prefers-color-scheme: dark){body{background:#111;color:#eee}}</style>
+</head><body><h1>Clean page</h1><p id="js">waiting</p><script src="ok.js"></script></body></html>
+HTML
+    echo "document.getElementById('js').textContent = 'loaded';" > "${tmp}/ok.js"
+    cat > "${tmp}/broken.html" <<'HTML'
+<!doctype html><html><head><meta charset="utf-8"><title>broken</title></head><body>
+<div id="wide" style="width:2000px">too wide</div>
+<p id="tex">Cross section $\sigma(E_\nu)$</p>
+<img src="missing.png" alt="missing">
+<script>console.error("page-check test error")</script>
+<script src="https://example.com/not-allowed.js"></script>
+</body></html>
+HTML
+    if page-check "${tmp}/clean.html" >"${tmp}/clean.out" 2>&1; then
+        pass "page-check: clean test page has no problems"
+    else
+        fail "page-check: clean test page (output:)"
+        sed 's/^/          /' "${tmp}/clean.out" | tail -8
+    fi
+    page-check "${tmp}/broken.html" >"${tmp}/broken.out" 2>&1
+    rc=$?
+    if [ "$rc" -eq 1 ]; then pass "page-check: broken test page exits 1"; else fail "page-check: broken test page exits $rc (expected 1)"; fi
+    for marker in "div#wide" '$\sigma(E_\nu)$' "missing.png" "page-check test error" "example.com/not-allowed.js"; do
+        if grep -qF -- "$marker" "${tmp}/broken.out"; then pass "page-check reports: $marker"; else fail "page-check missed: $marker"; fi
+    done
+    if page-check "${tmp}/clean.html" --shot "${tmp}/shot.png" --selector h1 >/dev/null 2>&1 && [ -s "${tmp}/shot.png" ]; then
+        pass "page-check --shot saves an element screenshot"
+    else
+        fail "page-check --shot did not save a screenshot"
+    fi
+    rm -rf "$tmp"
+}
+
 workspace_checks() {
     section "Workspace"
     if [ -d "$WORKSPACE" ]; then pass "$WORKSPACE is mounted: $(ls "$WORKSPACE" | tr '\n' ' ')"; else fail "$WORKSPACE missing"; fi
@@ -423,6 +472,7 @@ if [ "${1:-}" != "--agent-probe" ]; then
     root_checks
     python_checks
     latex_checks
+    html_checks
     workspace_checks
 fi
 

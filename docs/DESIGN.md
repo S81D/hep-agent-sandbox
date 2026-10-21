@@ -16,8 +16,8 @@ macOS (trusted)
       └─ HEP dev container  (user vscode, no sudo, cap-drop=ALL, no-new-privileges, no docker.sock)
            ├─ VS Code server + extensions (Python, Jupyter, C/C++, CMake, LaTeX Workshop,
            │   Claude Code, Codex)                         ← agents execute here
-           ├─ conda env: Python + ROOT + HEP stack (pinned), Node.js
-           ├─ gcc/clang/cmake/gdb, TeX Live subset, poppler
+           ├─ conda env: Python + ROOT + HEP stack (pinned), Node.js, KaTeX, pandoc
+           ├─ gcc/clang/cmake/gdb, TeX Live subset, poppler, headless Chromium (page-check)
            ├─ /workspace/hep            ← bind mount of ~/hep (read-write)
            │    ├─ infrastructure/      ← read-only (agents can't edit their own sandbox)
            │    └─ <dataset folders>    ← read-only (chosen per user)
@@ -94,6 +94,11 @@ instead, because Claude Code refuses to start if that file exists but cannot be 
   and run code, typically after prompt injection from a web page or document. They can also reach
   services listening on the Mac via `host.docker.internal`.
 - **Agents' own logins** in the volumes are readable by those agents.
+- **Headless Chromium without its own sandbox:** `page-check` runs Playwright's Chromium with
+  `--no-sandbox`, because Chromium's sandbox needs user namespaces or a setuid helper, which
+  `--cap-drop=ALL` and `no-new-privileges` rule out. A browser exploit in a page would run with
+  the agent's own rights in the container, no more. `page-check` serves only the page's own
+  folder and blocks requests outside the artifact CDN allowlist.
 - **Agents outside the container stay unsandboxed:** desktop AI apps, and VS Code windows not
   attached to the container.
 
@@ -109,5 +114,6 @@ and a maintained list of hosts. Domains agents actually needed in the first sess
 | `github.com` (+ `api.github.com`, `objects.githubusercontent.com`) | git, releases |
 | `pypi.org`, `files.pythonhosted.org` | temporary pip installs |
 | `conda.anaconda.org` | conda packages (build time) |
+| `cdn.playwright.dev` | headless Chromium for `page-check` (build time) |
 | `cdnjs.cloudflare.com`, `cdn.jsdelivr.net` | JavaScript libraries (e.g. MathJax) |
 | VS Code marketplace / update servers | extensions (build/attach time) |

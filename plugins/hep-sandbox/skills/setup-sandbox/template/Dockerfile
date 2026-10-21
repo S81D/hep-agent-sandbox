@@ -89,8 +89,25 @@ RUN case "${TARGETARCH}" in \
 #   fails without it; pdftotext/pdfinfo/pdfimages cover bulk text and figure extraction.
 # bc, time: calculator and GNU time (/usr/bin/time -v reports peak memory), asked for in agent
 #   surveys.
+# lib*: shared libraries of Playwright's headless Chromium (setup/page-check.py): the Ubuntu 24.04
+#   Chromium list in Playwright's own dependency table (what `playwright install-deps chromium`
+#   installs). libgbm1 pulls in mesa and libllvm20 (~180 MB). fonts-*: without any system font,
+#   pages render with missing text and wrong widths.
 RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils bc time \
+        libasound2t64 libatk-bridge2.0-0t64 libatk1.0-0t64 libatspi2.0-0t64 libcairo2 \
+        libcups2t64 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 libnspr4 libnss3 \
+        libpango-1.0-0 libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 \
+        libxkbcommon0 libxrandr2 \
+        fonts-liberation fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+
+# Headless Chromium for Playwright, the build that matches the conda env's playwright. It lives in
+# a root-owned folder outside $HOME, so it survives rebuilds and agents cannot replace it (~100 MB
+# download from Playwright's CDN). Chromium's own sandbox needs privileges this container drops,
+# so Playwright runs it with --no-sandbox; the container is the boundary (docs/DESIGN.md).
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+RUN /opt/conda/envs/hep/bin/python -m playwright install --only-shell chromium \
+    && chmod -R a+rX /opt/ms-playwright
 
 # Non-root development user.
 RUN groupadd --gid ${USER_GID} ${USERNAME} \
@@ -116,17 +133,22 @@ USER ${USERNAME}
 # (installs to ~/.local/bin/claude). Auto-update is disabled in managed-settings.json.
 RUN curl -fsSL https://claude.ai/install.sh | bash -s ${CLAUDE_CODE_VERSION}
 
+# NODE_PATH: Node does not search the env's global node_modules on its own, so without it
+# `require('katex')` fails in agents' build scripts.
 ENV PATH=/home/${USERNAME}/.local/bin:/opt/conda/envs/hep/bin:${PATH} \
-    CONDA_PREFIX=/opt/conda/envs/hep
+    CONDA_PREFIX=/opt/conda/envs/hep \
+    NODE_PATH=/opt/conda/envs/hep/lib/node_modules
 
-# Agent policy and ssh config: root-owned and read-only to the vscode user. These come
-# last so editing them does not invalidate the large layers above.
+# Agent policy, ssh config and the page-check tool: root-owned and read-only to the vscode
+# user. These come last so editing them does not invalidate the large layers above.
 USER root
 COPY setup/ssh_config /etc/ssh/ssh_config.d/50-hep.conf
 COPY setup/known_hosts /etc/ssh/ssh_known_hosts
 COPY setup/managed-settings.json /etc/claude-code/managed-settings.json
+COPY setup/page-check.py /usr/local/bin/page-check
 RUN chmod 0644 /etc/ssh/ssh_config.d/50-hep.conf /etc/ssh/ssh_known_hosts \
         /etc/claude-code/managed-settings.json \
+    && chmod 0755 /usr/local/bin/page-check \
     # The policy text is a symlink into the read-only infrastructure/ mount, not a copy: edits
     # made on the Mac apply from the next session without a rebuild, and agents still cannot
     # change it. managed-settings.json stays a copy because Claude Code refuses to start when

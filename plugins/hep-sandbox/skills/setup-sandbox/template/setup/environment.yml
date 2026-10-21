@@ -39,3 +39,10 @@ dependencies:
 
   # JavaScript tooling (node/npm); Node 24 is the current LTS line (added 2026-10-14)
   - nodejs=24.21.0
+
+  # documents and HTML pages (added 2026-10-21)
+  - python-pptx=1.0.2          # editable PowerPoint decks
+  - pandoc=3.12.1              # Markdown with TeX maths -> standalone HTML (and other formats)
+  - katex=0.16.9               # TeX -> HTML/MathML when a page is built (Node package)
+  - playwright-python=1.64.0   # headless Chromium driver used by setup/page-check.py
+  - playwright=1.64.0          # its Node driver, same version; the Dockerfile installs the browser

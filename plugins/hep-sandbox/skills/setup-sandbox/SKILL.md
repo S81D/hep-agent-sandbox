@@ -5,7 +5,7 @@ license: MIT
 compatibility: macOS (Apple Silicon or Intel) with Docker Desktop (or OrbStack) and VS Code + Dev Containers. Uses bash, python3 (3.9+) and docker on the Mac. Does not install software itself.
 allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/preflight.sh *) Bash(${CLAUDE_SKILL_DIR}/scripts/secret_scan.sh *)
 metadata:
-  version: "0.1.1"
+  version: "0.2.0"
   source: "https://github.com/S81D/hep-agent-sandbox"
 ---
 
@@ -19,7 +19,8 @@ optionally Codex) do their work, so that agents see only the user's research fol
   `infrastructure/` and any dataset folders the user chooses)
 - non-root user `vscode`, no sudo, `--cap-drop=ALL`, `no-new-privileges`, no Docker socket
 - conda-forge env with ROOT and the HEP Python stack (pinned), C/C++ toolchain, TeX Live
-  subset, poppler, Node.js, Claude Code and Codex CLIs
+  subset, poppler, Node.js, pandoc/KaTeX/python-pptx, headless Chromium (`page-check`),
+  Claude Code and Codex CLIs
 - the Mac's ssh-agent forwarded by VS Code (keys never enter the container); agent logins
   and compiled builds in named Docker volumes
 - an agent policy (`setup/agent-policy.md`) loaded as managed Claude Code instructions

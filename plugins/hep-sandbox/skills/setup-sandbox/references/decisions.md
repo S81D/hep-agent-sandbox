@@ -44,7 +44,8 @@ All presets keep `ForwardAgent no` (the key is never passed beyond the first hos
 
 **Default:** the tested pins in `template/setup/environment.yml` (Python 3.14, ROOT 6.40, numpy,
 scipy, matplotlib, pandas, uproot, awkward, hist, vector, particle, iminuit, pyhepmc, jupyterlab,
-Node.js 24). They solve on both `linux-aarch64` and `linux-64`.
+Node.js 24, python-pptx, pandoc, KaTeX, Playwright). They solve on both `linux-aarch64` and
+`linux-64`.
 
 **Match the host:** if the user has an analysis conda env on the Mac (`conda env list`), copy its
 key versions into the rendered `setup/environment.yml` so results match. Then check that it

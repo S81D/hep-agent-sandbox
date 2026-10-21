@@ -9,7 +9,9 @@ your Mac with access to everything.
 
 - **HEP tooling:** Python 3.14 with ROOT 6.40, uproot, awkward, hist, iminuit, pyhepmc, jupyterlab
   (pinned via conda-forge); gcc/clang/cmake/gdb; a TeX Live subset (REVTeX, biber, LuaLaTeX,
-  XeLaTeX); poppler for PDFs; Node.js; the Claude Code and Codex CLIs.
+  XeLaTeX); poppler for PDFs; Node.js; pandoc, KaTeX and python-pptx; headless Chromium with
+  `page-check`, which reports problems in agents' HTML pages as text instead of token-hungry
+  screenshots; the Claude Code and Codex CLIs.
 - **Isolation:** one bind mount of your research folder, with optional read-only dataset folders.
   No sudo, all Linux capabilities dropped, no Docker socket, no Mac credentials.
 - **GitHub over SSH:** through your Mac's forwarded ssh-agent; your key never enters the container.

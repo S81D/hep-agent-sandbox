@@ -36,6 +36,7 @@ Problems met while building and using this setup, with their causes and fixes.
 | Scanned PDF text is garbled | The text layer is bad OCR | Render the pages: `pdftoppm -png -r 100 -f N -l N file.pdf out` |
 | `python3 -I -c "import X"` fails although `pip install --user X` worked | `-I` ignores user site-packages | Put the package in `setup/environment.yml` and rebuild |
 | `grep` finds nothing in extracted text | Control characters make the text look binary | `grep -a` |
+| An agent burns tokens screenshotting the HTML pages it builds | Each screenshot costs about width × height / 750 tokens and stays in context | `page-check page.html` reports layout, script and maths problems as text; `--shot --selector` for one element when a picture is needed |
 | A compiled build (e.g. Geant4) vanished after a rebuild | It lived in the container's own filesystem | Build in `~/builds` (the `hep-builds` volume) |
 | Policy edits don't take effect | Policy is read at session start | Start a new Claude session. `managed-settings.json` changes need a rebuild |
 | A project's `@agent-notes/INDEX.md` import doesn't load | An unclosed code fence earlier in `CLAUDE.md` (imports in code blocks are ignored) | Close the fence |

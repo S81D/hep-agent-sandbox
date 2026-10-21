@@ -44,6 +44,23 @@ pages instead (`pdftoppm -png -r 100 -f N -l N file.pdf out`) and read the image
 pip-install PDF libraries for this. If `grep` finds nothing in extracted text, retry with
 `grep -a` (control characters can make it treat the text as binary).
 
+HTML pages you build (artifacts, viewers, reports): check them with `page-check page.html` before
+handing them over. It loads the page in headless Chromium at desktop and phone widths, light and
+dark, and reports as text: JavaScript errors, horizontal overflow, unrendered TeX, broken images,
+empty charts, and anything a published artifact could not load. Look at a screenshot only for what
+the report cannot tell you (e.g. how a figure looks), one element at a time:
+`page-check page.html --shot shot.png --selector '#fig2'`. Each screenshot costs about
+width × height / 750 tokens and stays in the conversation, so no full-page or every-variant
+screenshots. Add `--any-host` for a page that is opened directly rather than published as an
+artifact. Don't install other browsers or browser MCP servers.
+
+Maths in HTML pages: render TeX when the page is built, not in the reader's browser. KaTeX is
+installed for Node (`require('katex')`); `katex.renderToString(tex, {output: 'mathml'})` needs no
+CSS or fonts (published artifacts load stylesheets only from Google Fonts). For notes written in
+Markdown, `pandoc notes.md --math-method=mathml --standalone --embed-resources -o notes.html`
+makes a self-contained page. Slides: `python-pptx` is installed for editable `.pptx` decks; the user opens
+them on the Mac.
+
 Do not try to reach anything outside the container: host files, credentials, SSH keys, the Docker
 daemon, or services on the Mac (`host.docker.internal`). Ask before network fetches beyond the
 documentation the task needs. Read-only `git fetch` / `git ls-remote` on a repository's

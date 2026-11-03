@@ -139,16 +139,18 @@ ENV PATH=/home/${USERNAME}/.local/bin:/opt/conda/envs/hep/bin:${PATH} \
     CONDA_PREFIX=/opt/conda/envs/hep \
     NODE_PATH=/opt/conda/envs/hep/lib/node_modules
 
-# Agent policy, ssh config and the page-check tool: root-owned and read-only to the vscode
-# user. These come last so editing them does not invalidate the large layers above.
+# Agent policy, ssh config and the page-check and side-by-side-diff tools: root-owned and
+# read-only to the vscode user, so agents cannot change the tools the user reviews their work
+# with. These come last so editing them does not invalidate the large layers above.
 USER root
 COPY setup/ssh_config /etc/ssh/ssh_config.d/50-hep.conf
 COPY setup/known_hosts /etc/ssh/ssh_known_hosts
 COPY setup/managed-settings.json /etc/claude-code/managed-settings.json
 COPY setup/page-check.py /usr/local/bin/page-check
+COPY setup/side-by-side-diff.py /usr/local/bin/side-by-side-diff
 RUN chmod 0644 /etc/ssh/ssh_config.d/50-hep.conf /etc/ssh/ssh_known_hosts \
         /etc/claude-code/managed-settings.json \
-    && chmod 0755 /usr/local/bin/page-check \
+    && chmod 0755 /usr/local/bin/page-check /usr/local/bin/side-by-side-diff \
     # The policy text is a symlink into the read-only infrastructure/ mount, not a copy: edits
     # made on the Mac apply from the next session without a rebuild, and agents still cannot
     # change it. managed-settings.json stays a copy because Claude Code refuses to start when

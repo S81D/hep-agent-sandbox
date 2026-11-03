@@ -58,8 +58,26 @@ Maths in HTML pages: render TeX when the page is built, not in the reader's brow
 installed for Node (`require('katex')`); `katex.renderToString(tex, {output: 'mathml'})` needs no
 CSS or fonts (published artifacts load stylesheets only from Google Fonts). For notes written in
 Markdown, `pandoc notes.md --math-method=mathml --standalone --embed-resources -o notes.html`
-makes a self-contained page. Slides: `python-pptx` is installed for editable `.pptx` decks; the user opens
-them on the Mac.
+makes a self-contained page.
+
+Slides: `python-pptx` is installed for editable `.pptx` decks; the user opens them in PowerPoint on
+the Mac. Nothing here renders a slide exactly (no PowerPoint or LibreOffice), so:
+- Use the template's layouts and placeholders. Set the font of every text run you add: text
+  boxes outside placeholders get the theme font, which is not always the one the template asks for.
+- Helvetica and Arial lack many maths symbols (e.g. ⊗ ∝ ⟨ ⟩), and PowerPoint then substitutes
+  another font. Set such characters to Cambria Math, which ships with Office and has them.
+- Estimate text fit with Liberation Sans (`/usr/share/fonts/truetype/liberation/`), which has
+  Arial's and Helvetica's widths, and leave spare room: PowerPoint's wrapping and autofit differ.
+- When handing over a deck, name the slides to check by eye (dense text, symbols, sub- and
+  superscripts, overlapping shapes).
+
+Large change sets for review (5 or more files and 200 or more changed lines): make a side-by-side
+(before | after) page with `side-by-side-diff -o <page>.html --repo <repo> --title "<change>"`.
+Options choose the comparison (`--staged`, `--base A --target B`, `--include-untracked`,
+`--exclude GLOB`); `side-by-side-diff --help` lists them. Check that the printed
+`N files (+A -D)` matches `git diff --shortstat` (skipped binary files lower N), write the page
+outside tracked source, never commit or publish it, and still summarise the change per file in
+chat. Smaller changes go in chat as before | after blocks.
 
 Do not try to reach anything outside the container: host files, credentials, SSH keys, the Docker
 daemon, or services on the Mac (`host.docker.internal`). Ask before network fetches beyond the

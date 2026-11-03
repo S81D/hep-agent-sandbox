@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verification for the HEP dev container: toolchain, ROOT, Python, LaTeX, HTML tools, SSH,
+# Verification for the HEP dev container: toolchain, ROOT, Python, LaTeX, HTML and review tools, SSH,
 # and the isolation (security) checks from README §16, §31 and §33.
 #
 # Every check runs (deliberately no `set -e`). Each prints PASS, FAIL or WARN, and the
@@ -300,7 +300,7 @@ for line in open(sys.argv[1]):
     print(f"  {status}  {name} {installed}" + ("" if status == "PASS" else f" (pinned {pinned})"))
 
 # The imports analyses actually use must work, not just be installed.
-for module in ["numpy", "scipy", "matplotlib", "pandas", "uproot", "awkward", "hist",
+for module in ["numpy", "scipy", "matplotlib", "pandas", "sympy", "uproot", "awkward", "hist",
                "vector", "particle", "iminuit", "pyhepmc", "pptx", "playwright.sync_api"]:
     try:
         __import__(module)
@@ -448,6 +448,34 @@ HTML
     rm -rf "$tmp"
 }
 
+review_checks() {
+    section "Review pages (side-by-side-diff)"
+    # Positive control in a throwaway repo with one edited and one renamed file: the page must
+    # report git's own counts and head the rename "old → new".
+    local tmp out
+    tmp=$(mktemp -d)
+    git -C "$tmp" init -q
+    seq 1 20 > "${tmp}/kept.txt"
+    seq 1 20 > "${tmp}/old.txt"
+    git -C "$tmp" add -A
+    git -C "$tmp" -c user.name=verify -c user.email=verify@localhost commit -qm base
+    sed -i 's/^5$/five/' "${tmp}/kept.txt"
+    git -C "$tmp" mv old.txt new.txt
+    # The tool prints "N files (+A -D) -> <page>"; ${out%% ->*} keeps the part before the arrow.
+    if out=$(side-by-side-diff --repo "$tmp" -o "${tmp}/review.html" 2>&1) \
+            && [ "${out%% ->*}" = "2 files (+1 -1)" ]; then
+        pass "side-by-side-diff counts match git: ${out%% ->*}"
+    else
+        fail "side-by-side-diff: ${out}"
+    fi
+    if grep -qF 'old.txt → new.txt' "${tmp}/review.html" 2>/dev/null; then
+        pass "side-by-side-diff heads the rename old.txt → new.txt"
+    else
+        fail "side-by-side-diff page has no rename heading"
+    fi
+    rm -rf "$tmp"
+}
+
 workspace_checks() {
     section "Workspace"
     if [ -d "$WORKSPACE" ]; then pass "$WORKSPACE is mounted: $(ls "$WORKSPACE" | tr '\n' ' ')"; else fail "$WORKSPACE missing"; fi
@@ -473,6 +501,7 @@ if [ "${1:-}" != "--agent-probe" ]; then
     python_checks
     latex_checks
     html_checks
+    review_checks
     workspace_checks
 fi
 

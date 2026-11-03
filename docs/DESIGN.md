@@ -17,7 +17,8 @@ macOS (trusted)
            ├─ VS Code server + extensions (Python, Jupyter, C/C++, CMake, LaTeX Workshop,
            │   Claude Code, Codex)                         ← agents execute here
            ├─ conda env: Python + ROOT + HEP stack (pinned), Node.js, KaTeX, pandoc
-           ├─ gcc/clang/cmake/gdb, TeX Live subset, poppler, headless Chromium (page-check)
+           ├─ gcc/clang/cmake/gdb, TeX Live subset, poppler, headless Chromium (page-check),
+           │   side-by-side-diff (review pages; root-owned so agents can't alter it)
            ├─ /workspace/hep            ← bind mount of ~/hep (read-write)
            │    ├─ infrastructure/      ← read-only (agents can't edit their own sandbox)
            │    └─ <dataset folders>    ← read-only (chosen per user)

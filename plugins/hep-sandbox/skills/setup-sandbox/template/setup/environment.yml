@@ -18,6 +18,7 @@ dependencies:
   - scipy=1.18.0
   - matplotlib-base=3.11.1   # -base: no Qt GUI backend, which a headless container doesn't need
   - pandas=3.0.3
+  - sympy=1.14.0             # symbolic algebra for derivation checks
 
   # HEP Python ecosystem
   - uproot=5.7.5

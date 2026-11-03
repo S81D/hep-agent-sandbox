@@ -43,7 +43,7 @@ All presets keep `ForwardAgent no` (the key is never passed beyond the first hos
 ## 4. Python pins
 
 **Default:** the tested pins in `template/setup/environment.yml` (Python 3.14, ROOT 6.40, numpy,
-scipy, matplotlib, pandas, uproot, awkward, hist, vector, particle, iminuit, pyhepmc, jupyterlab,
+scipy, matplotlib, pandas, sympy, uproot, awkward, hist, vector, particle, iminuit, pyhepmc, jupyterlab,
 Node.js 24, python-pptx, pandoc, KaTeX, Playwright). They solve on both `linux-aarch64` and
 `linux-64`.
 

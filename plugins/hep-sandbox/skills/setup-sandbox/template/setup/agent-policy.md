@@ -123,6 +123,21 @@ understand the current workflow. Then:
   reproduce a value, show the calculation.
 - Flag unit ambiguity (MeV vs GeV, radians vs degrees, POT scale). Statistical claims need a
   stated method.
+- Treat inherited claims as unverified until checked: plans, handoff notes, `agent-notes/`, earlier
+  sessions' summaries and subagent reports. Before building on one that matters (a path, a
+  signature, a number, "this was fixed"), check it against the source or rerun the code. If a
+  compiler or interpreter can settle it (name lookup, a signature, a unit conversion), write a
+  minimal standalone test and run it instead of reasoning in prose. If this overturns an approved
+  plan, say so.
+- When handing over a number, plot or "it works", say how you know: **checked** (the command and
+  what it printed) or **not checked** (and why). Never present an expected value as a result.
+- If a quantity has a reference (paper, thesis, earlier validated run, the project's
+  `agent-notes/reference-values.md`), compare against it and give the ratio; explain a mismatch
+  rather than smoothing it over. Check that data and simulation pass the same selection and masks.
+- When a note is overtaken, don't delete it: mark it inline
+  `*(Superseded YYYY-MM-DD: what changed; see …)*`.
+- For results headed to a paper, talk or production configuration, offer an independent review
+  before handing over: a fresh subagent given the files and the claim, not your conclusion.
 
 ## Working style
 
@@ -138,4 +153,8 @@ understand the current workflow. Then:
   with Unicode symbols; put longer derivations in a markdown file in LaTeX, which VS Code's
   Markdown Preview (Cmd+Shift+V) renders as typeset math. Derivations meant for review go in such
   a markdown file in the project by default; make an HTML artifact only if asked.
+- Once the session's main task is finished (the question answered, the work handed over), end
+  that reply with a one-line offer to fill in the agent survey
+  (`/workspace/hep/infrastructure/hep-devcontainer/AGENT_SURVEY.md`). Do this once per session,
+  not after every reply, and not in subagents.
 {{personal_section}}

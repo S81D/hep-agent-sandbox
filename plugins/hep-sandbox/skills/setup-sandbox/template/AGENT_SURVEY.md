@@ -55,5 +55,10 @@ informs a future network allowlist.
 ### 9. Speed
 Operations that were slow (builds, file searches, notebook or script runs), with rough durations.
 
-### 10. Top recommendations
+### 10. Verification
+Which numbers, plots or "it works" statements did you hand over without checking them, and why?
+What would have let you check them (a reference value, a test, provenance on an input, a tool)?
+Did a check you ran catch a real problem?
+
+### 11. Top recommendations
 Up to three changes, ranked, each with the expected benefit and any cost or risk.

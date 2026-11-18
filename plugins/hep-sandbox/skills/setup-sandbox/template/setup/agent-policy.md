@@ -153,8 +153,10 @@ understand the current workflow. Then:
   with Unicode symbols; put longer derivations in a markdown file in LaTeX, which VS Code's
   Markdown Preview (Cmd+Shift+V) renders as typeset math. Derivations meant for review go in such
   a markdown file in the project by default; make an HTML artifact only if asked.
-- Once the session's main task is finished (the question answered, the work handed over), end
-  that reply with a one-line offer to fill in the agent survey
-  (`/workspace/hep/infrastructure/hep-devcontainer/AGENT_SURVEY.md`). Do this once per session,
-  not after every reply, and not in subagents.
+- When the session's main task is finished, fill in the agent survey yourself if anything is worth
+  reporting: a command or tool that failed, a missing package, a sandbox limit that blocked work,
+  an instruction that was unclear or out of date, or a result you could not check. Follow
+  `/workspace/hep/infrastructure/hep-devcontainer/AGENT_SURVEY.md`, save the file where it says,
+  and give its path in one line. If nothing is worth reporting, don't mention the survey. At most
+  once per session; never in subagents.
 {{personal_section}}
